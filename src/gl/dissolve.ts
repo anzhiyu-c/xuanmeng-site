@@ -1,4 +1,4 @@
-// 角色舞台：两张立绘之间的“金焰溶解”。旧立绘从边缘烧成金粉，新立绘从墨中显形。
+// 角色舞台：两张立绘之间的光晕溶解。旧立绘化作一层暖光散去，新立绘从光里显形。
 import * as THREE from 'three';
 
 const VERT = /* glsl */ `
@@ -39,17 +39,18 @@ void main(){
   float field = n*.74 + fine*.26;
 
   // 轻微的呼吸与鼠标视差
-  vec2 breath = vec2(0., sin(uT*.8)*.004);
+  vec2 breath = vec2(0., sin(uT*.7)*.005);
   vec2 par = uMouse*.012;
 
   float p = uP*1.36 - .18;
 
-  // 被烧掉的旧图向上飘散一点
-  vec4 a = sampleFit(uA, uv, uAspA, -par + breath + vec2(0., -uP*.03));
-  vec4 b = sampleFit(uB, uv, uAspB, -par + breath + vec2(0., (1.-uP)*.025));
+  // 旧图被吹散时向上飘，新图从下方升起并微微放大落定
+  vec4 a = sampleFit(uA, uv, uAspA, -par + breath + vec2(0., -uP*.05));
+  vec2 zoom = (uv - .5)*(1. + (1. - uP)*.08) + .5;
+  vec4 b = sampleFit(uB, zoom, uAspB, -par + breath + vec2(0., (1. - uP)*.04));
 
-  float cutA = smoothstep(p - .012, p + .012, field);     // 1=旧图还在
-  float cutB = 1. - smoothstep(p - .17, p - .14, field);       // 1=新图已现
+  float cutA = smoothstep(p - .05, p + .05, field);     // 1=旧图还在
+  float cutB = 1. - smoothstep(p - .2, p - .11, field);  // 1=新图已现
 
   vec3 rgb = vec3(0.);
   float alpha = 0.;
@@ -59,15 +60,15 @@ void main(){
   }
   float showB = cutB*b.a;
   rgb = mix(rgb, b.rgb*b.a, cutB*step(.001, b.a));
-  alpha = max(alpha*(1.-cutB*step(.001,b.a)), showB);
+  alpha = max(alpha*(1. - cutB*step(.001, b.a)), showB);
 
-  // 溶解前沿：泥金烧边，只出现在有笔墨的地方
-  float edgeA = 1. - smoothstep(.0, .085, abs(field - p));
-  float edgeB = 1. - smoothstep(.0, .06, abs(field - (p - .155)));
+  // 溶解前沿：柔和的暖光，只出现在有画面的地方
+  float edgeA = 1. - smoothstep(.0, .12, abs(field - p));
+  float edgeB = 1. - smoothstep(.0, .1, abs(field - (p - .155)));
   float running = step(.001, uP)*step(uP, .999);
-  vec3 burn = uBurn*(edgeA*a.a*1.7 + edgeB*b.a*1.15)*running;
+  vec3 burn = uBurn*(edgeA*a.a*.9 + edgeB*b.a*.7)*running;
   rgb += burn;
-  alpha = max(alpha, clamp((edgeA*a.a + edgeB*b.a)*running, 0., 1.));
+  alpha = max(alpha, clamp((edgeA*a.a + edgeB*b.a)*running*.8, 0., 1.));
 
   gl_FragColor = vec4(rgb, alpha);
 }`;
@@ -181,12 +182,12 @@ export function createDissolve(canvas: HTMLCanvasElement, sources: string[]): Di
       }
       mat.uniforms.uP.value = 0;
       const start = performance.now();
-      const duration = 1150;
+      const duration = 1300;
       await new Promise<void>((done) => {
         const step = () => {
           if (mine !== token) return done();
           const k = Math.min(1, (performance.now() - start) / duration);
-          mat.uniforms.uP.value = 1 - Math.pow(1 - k, 2.4);
+          mat.uniforms.uP.value = k * k * (3 - 2 * k);
           if (k < 1) requestAnimationFrame(step);
           else done();
         };

@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>《玄梦》ONLINE 官方网站</title>
-  <meta name="description" content="《玄梦》ONLINE 官方网站。国风回合制西游 MMORPG，玄梦一场，快意三界。客户端下载、新闻公告与游戏资料。" />
+  <meta name="description" content="《玄梦》ONLINE 官方网站。回合制西游 MMORPG，玄梦一场，快意三界。客户端下载、新闻公告与游戏资料。" />
   <link rel="canonical" href="https://www.xuanmeng.cc/" />
   <meta property="og:title" content="《玄梦》ONLINE 官方网站" />
-  <meta property="og:description" content="《玄梦》ONLINE 官方网站。国风回合制西游 MMORPG，玄梦一场，快意三界。客户端下载、新闻公告与游戏资料。" />
+  <meta property="og:description" content="《玄梦》ONLINE 官方网站。回合制西游 MMORPG，玄梦一场，快意三界。客户端下载、新闻公告与游戏资料。" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.xuanmeng.cc/" />
   <meta property="og:image" content="https://www.xuanmeng.cc/img/og_cover.jpg" />
@@ -18,24 +18,23 @@
   <script type="module" src="/src/home/main.ts"></script>
 </head>
 <body class="home">
-  <!-- 进站：墨层之上只有一枚印和进度 -->
+  <!-- 进站：光幕之上一颗转动的星和进度 -->
   <div class="loader" id="loader" aria-hidden="true">
-    <span class="loader-seal">梦</span>
+    <span class="loader-star"></span>
     <span class="loader-text">入梦 <b id="loader-pct">0</b></span>
   </div>
 
   <main>
-    <!-- 一 三界穿行：标题画在 WebGL 里，这里保留语义与竖排文字 -->
+    <!-- 一 三界穿行：标题画在 WebGL 里，这里保留语义 -->
     <section class="flight" id="flight" aria-label="三界">
       <div class="flight-stage" id="flight-stage">
         <canvas id="flight-canvas" aria-hidden="true"></canvas>
         <div class="flight-grade" aria-hidden="true"></div>
-        <div class="hero-shade" id="hero-shade" aria-hidden="true"></div>
 
         <div class="hero-copy" id="hero-copy">
           <h1 class="sr-only">玄梦 ONLINE</h1>
           <p class="hero-line" id="hero-line">玄梦一场，快意三界</p>
-          <p class="hero-sub" id="hero-sub">传说取经之后，三界并未就此太平。长安城灯火依旧，江湖之下暗流涌动。拜入门派、驯养灵宠、结交八方好友，于策略回合战斗中书写属于自己的西游传奇。</p>
+          <p class="hero-sub" id="hero-sub">取经之后，三界并未就此太平。拜入门派，驯养灵宠，在策略回合的交锋里写下属于你的西游传奇。</p>
           <div class="hero-cta" id="hero-cta">
             <a class="btn btn-gold" href="/download/">立即下载客户端</a>
             <a class="btn btn-ghost" href="/news/">查看最新公告</a>
@@ -46,21 +45,21 @@
         <div class="scroll-hint" id="scroll-hint" aria-hidden="true"><span>向下入梦</span><i></i></div>
 
         <article class="realm" data-realm="xian" id="realm-xian">
-          <span class="seal">仙</span>
+          <span class="badge">仙</span>
           <h2 class="realm-name">天庭四海</h2>
           <p class="realm-text">仙族司职天庭四海。云上的宫阙与海底的龙庭同属一脉，天兵掌雷，龙裔呼风，观音杨柳济苍生。</p>
           <ul class="realm-sects"><li>天宫</li><li>龙宫</li><li>普陀山</li><li>五庄观</li><li>凌波城</li><li>花果山</li></ul>
         </article>
 
         <article class="realm" data-realm="ren" id="realm-ren">
-          <span class="seal">人</span>
+          <span class="badge">人</span>
           <h2 class="realm-name">长安灯火</h2>
           <p class="realm-text">人族聚居长安。大唐官府与化生寺坐落城中，江州、建邺通商南北，灯火之下却已暗流涌动。</p>
           <ul class="realm-sects"><li>大唐官府</li><li>方寸山</li><li>化生寺</li><li>女儿村</li><li>神木林</li></ul>
         </article>
 
         <article class="realm" data-realm="mo" id="realm-mo">
-          <span class="seal">魔</span>
+          <span class="badge">魔</span>
           <h2 class="realm-name">酆都群岭</h2>
           <p class="realm-text">魔族雄踞酆都群岭。牛魔遗威、幽冥判官、百兽之王各据一方，妖魔重现，一场跨越三界的因缘就此开始。</p>
           <ul class="realm-sects"><li>魔王寨</li><li>阴曹地府</li><li>狮驼岭</li><li>盘丝洞</li><li>无底洞</li></ul>
@@ -75,10 +74,10 @@
     <!-- 二 角色 -->
     <section class="roles" id="roles" aria-labelledby="roles-title"></section>
 
-    <!-- 三 特色长卷 -->
-    <section class="scroll-sec" id="features" aria-labelledby="features-title"></section>
+    <!-- 三 特色 -->
+    <section class="feat-sec" id="features" aria-labelledby="features-title"></section>
 
-    <!-- 四 门派命盘 -->
+    <!-- 四 门派 -->
     <section class="sects" id="sects" aria-labelledby="sects-title"></section>
 
     <!-- 五 梦影 -->

@@ -1,4 +1,4 @@
-// 用法：node art/gen.mjs SCENES ROLES ... [--jobs=4] [--chunk=6]
+// 用法：node art/gen.mjs SCENES ROLES ... [--jobs=4] [--chunk=6] [--only=正则]
 // 已存在的文件会跳过，所以中断后可以直接重跑。
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -10,7 +10,10 @@ const names = args.filter((a) => !a.startsWith('--'));
 const jobs = opt('jobs', 4);
 const chunkSize = opt('chunk', 6);
 
-const todo = names.flatMap((n) => GROUPS[n]).filter((it) => !existsSync(it.path));
+const only = args.find((a) => a.startsWith('--only='))?.slice(7);
+const todo = names
+  .flatMap((n) => GROUPS[n])
+  .filter((it) => !existsSync(it.path) && (!only || new RegExp(only).test(it.path)));
 console.log(`待生成 ${todo.length} 张`);
 if (!todo.length) process.exit(0);
 

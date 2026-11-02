@@ -28,16 +28,16 @@ pnpm build
 
 ## 目录
 
-- `src/home/`：首页各段（三界穿行、角色舞台、特色长卷、门派命盘、梦影、月门）
+- `src/home/`：首页各段（三界穿行、角色舞台、全屏特色、门派画廊、梦影、光门）
 - `src/pages/`：八个内页和公告正文页
-- `src/gl/`：WebGL 效果（场景穿行、金焰溶解、水墨切页）
+- `src/gl/`：WebGL 效果（场景穿行、立绘溶解、切页光幕）
+- `src/lib/`：公共外壳和动效（平滑滚动、跟随光标、磁吸按钮、柔光、法阵）
 - `src/data/`：角色、门派、装备、梦影等资料
-- `public/fonts/xm-display-fix.woff2`：修正站酷小薇「回、徊、赐」三字轮廓错误的补丁字体
 - `art/`：素材生成与处理脚本
 
 ## 素材
 
-全站图片由 Codex 生成，提示词都在 `art/manifest.mjs`。
+全站图片由 Codex 生成，提示词都在 `art/manifest.mjs`。立绘的基准是 `art/raw/style/d_she2.png`，新角色要对照它的头身比和质感。
 
 ```bash
 node art/gen.mjs ROLES --jobs=3
@@ -48,5 +48,7 @@ python3 art/process.py
 ```
 
 第一条只生成缺失的图，删掉 `art/raw/` 下的某张再运行就能重画。第二条把原图压缩成站点用的 webp，输出到 `public/img/`。
+
+顶部标题有 `art/raw/logo_*.png` 几款可选，当前用 `royal`。换款时删掉 `public/img/logo-mark.webp` 再运行 `XM_LOGO=crystal python3 art/process.py`。
 
 生成后运行 `python3 art/audit.py` 检查透明底素材有没有被画布切边，加 `--delete` 会删掉有问题的原图以便重画。

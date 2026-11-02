@@ -1,6 +1,8 @@
-// 梦影：青花与水墨两个系列共用一块舞台。切换时，页面在“青花瓷釉”和“宣纸水墨”两种材质之间翻转。
+// 梦影：青花与水墨两个系列共用一块舞台，灵兽立在缓慢转动的法阵上。切换系列时底色在淡青和珍珠灰之间渐变。
 import { MENGYING } from '../data/mengying-data.js';
 import { petImg, petSmall } from '../data/assets';
+import { glowAt } from '../lib/fx';
+import { magicCircle } from '../lib/magic';
 import { coarse, gsap, reduced } from '../lib/motion';
 
 type Pet = { name: string; base: string; img: string; note?: string; epigraph?: string; intro?: string };
@@ -18,14 +20,17 @@ export function initDreams() {
     <div class="dreams-bg" aria-hidden="true"></div>
     <div class="dreams-inner">
       <header class="dreams-head">
-        <h2 id="dreams-title" data-reveal-title>梦影绘卷</h2>
+        <div class="sec-head"><h2 id="dreams-title" data-reveal-title>梦影绘卷</h2></div>
         <p>虚实相系，影梦幻真。仙人所制双鱼梦影符可引召唤兽入梦，为其唤醒一段灵瓷与画卷的旧梦。</p>
         <div class="dreams-tabs" role="tablist" aria-label="梦影系列">
           ${SERIES.map((s, i) => `<button type="button" role="tab" data-i="${i}" aria-selected="${i === 0}">${s.title}</button>`).join('')}
         </div>
       </header>
       <div class="dreams-stage" id="dreams-stage">
-        <figure class="dreams-main" id="dreams-main"><img id="dreams-img" alt="" loading="lazy" /></figure>
+        <div class="dreams-orbit">
+          ${magicCircle('dreams-magic')}
+          <figure class="dreams-main" id="dreams-main"><img id="dreams-img" alt="" loading="lazy" /></figure>
+        </div>
         <div class="dreams-info" id="dreams-info" aria-live="polite"></div>
       </div>
       <ul class="dreams-list" id="dreams-list" aria-label="梦影灵兽列表"></ul>
@@ -66,17 +71,16 @@ export function initDreams() {
     }
     gsap.to(main, {
       opacity: 0,
-      scale: 0.92,
-      rotation: -3,
-      filter: 'blur(12px)',
-      duration: 0.32,
+      y: -14,
+      duration: 0.4,
       ease: 'power2.in',
       onComplete: () => {
         img.src = petImg(p.img);
         img.alt = p.name;
         drawInfo(p);
-        gsap.fromTo(info.children, { opacity: 0, y: 14 }, { opacity: 1, y: 0, stagger: 0.06, duration: 0.7, ease: 'power3.out' });
-        gsap.fromTo(main, { opacity: 0, scale: 1.08, rotation: 3, filter: 'blur(12px)' }, { opacity: 1, scale: 1, rotation: 0, filter: 'blur(0px)', duration: 1, ease: 'power3.out' });
+        gsap.fromTo(info.children, { opacity: 0, y: 14 }, { opacity: 1, y: 0, stagger: 0.06, duration: 1, ease: 'expo.out' });
+        gsap.fromTo(main, { opacity: 0, y: 22, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 1.4, ease: 'expo.out' });
+        glowAt(main, 0.35);
       },
     });
   };
@@ -110,12 +114,12 @@ export function initDreams() {
     const qx = gsap.quickTo(main, 'rotationY', { duration: 0.9, ease: 'power3.out' });
     const qy = gsap.quickTo(main, 'rotationX', { duration: 0.9, ease: 'power3.out' });
     root.addEventListener('pointermove', (e) => {
-      qx((e.clientX / innerWidth - 0.5) * 14);
-      qy(-(e.clientY / innerHeight - 0.5) * 10);
+      qx((e.clientX / innerWidth - 0.5) * 8);
+      qy(-(e.clientY / innerHeight - 0.5) * 6);
     }, { passive: true });
   }
   if (!reduced) {
-    gsap.to(img, { y: -14, duration: 3.4, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+    gsap.to(img, { y: -10, duration: 4.6, ease: 'sine.inOut', yoyo: true, repeat: -1 });
     gsap.from(main, { scrollTrigger: { trigger: root, start: 'top 65%' }, opacity: 0, scale: 0.8, duration: 1.4, ease: 'power3.out', clearProps: 'scale,opacity' });
   }
 }

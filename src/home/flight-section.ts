@@ -37,7 +37,7 @@ export async function initFlight(onProgress: (v: number) => void) {
   }
 
   await flight.loadChapter(0, (done, total) => onProgress((done / total) * 0.92));
-  // 后两界等用户开始往下滚才加载；只看首屏就离开的访客不用多下载 5MB
+  // 后两界等用户开始往下滚才加载；只看首屏就离开的访客不用多下载
   const loaded = [true, false, false];
   const ensure = (i: number) => {
     if (loaded[i]) return;
@@ -75,15 +75,17 @@ export async function initFlight(onProgress: (v: number) => void) {
   gsap.timeline({
     scrollTrigger: { trigger: section, start: 'top top', end: () => `+=${innerHeight * 0.9}`, scrub: 0.5 },
   })
-    .to(copy, { y: -60, opacity: 0, ease: 'power1.in' }, 0)
+    .to(copy, { y: -70, opacity: 0, ease: 'power1.in' }, 0)
     .to(news, { opacity: 0, y: 24 }, 0)
     .to(hint, { opacity: 0 }, 0)
-    .to('#hero-shade', { opacity: 0 }, 0);
+    .fromTo('#realm-rail', { opacity: 0 }, { opacity: 1 }, 0.3);
 
   // 每一界的文字在该界的进度区间内升起又退场
   REALM_SPANS.forEach(({ id, from, to }) => {
     const el = document.querySelector<HTMLElement>(id)!;
-    const items = [el.querySelector('.seal'), el.querySelector('.realm-name'), el.querySelector('.realm-text'), ...el.querySelectorAll('.realm-sects li')];
+    const name = el.querySelector<HTMLElement>('.realm-name')!;
+    const nameChars = splitChars(name);
+    const items = [el.querySelector('.realm-text'), el.querySelector('.realm-sects')];
     const total = () => section.offsetHeight - innerHeight;
     const tl = gsap.timeline({
       scrollTrigger: {
@@ -95,25 +97,29 @@ export async function initFlight(onProgress: (v: number) => void) {
       },
     });
     tl.set(el, { visibility: 'visible' })
-      .from(items, { opacity: 0, y: 34, filter: 'blur(8px)', stagger: 0.035, duration: 0.3, ease: 'power2.out' }, 0)
-      .to(el, { opacity: 0, y: -40, duration: 0.2, ease: 'power1.in' }, 0.8);
+      .from(el.querySelector('.badge'), { opacity: 0, duration: 0.1 }, 0)
+      .from(nameChars, { yPercent: 112, stagger: 0.03, duration: 0.2, ease: 'power3.out' }, 0.01)
+      .from(items, { opacity: 0, y: 24, stagger: 0.04, duration: 0.16, ease: 'power2.out' }, 0.12)
+      .to(el, { opacity: 0, y: -46, duration: 0.2, ease: 'power1.in' }, 0.8);
   });
 
   gsap.set([...chars, sub, cta, news, hint], { opacity: 0 });
 
   const intro = () => {
-    flight.revealTitle(1.9);
-    const tl = gsap.timeline({ delay: 1.05 });
-    tl.fromTo(chars, { opacity: 0, y: 18, filter: 'blur(8px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', stagger: 0.06, duration: 0.9, ease: 'power3.out' })
-      .fromTo(sub, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' }, '-=0.55')
-      .fromTo(cta, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }, '-=0.6')
-      .fromTo([news, hint], { opacity: 0 }, { opacity: 1, duration: 0.8 }, '-=0.3');
+    flight.revealTitle(1.8);
+    flight.playEnter();
+    const tl = gsap.timeline({ delay: 0.9 });
+    tl.fromTo(chars, { opacity: 0, y: 24 }, { opacity: 1, y: 0, stagger: 0.06, duration: 1.2, ease: 'expo.out' })
+      .fromTo(sub, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 1.2, ease: 'expo.out' }, '-=0.8')
+      .fromTo(cta, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 1.2, ease: 'expo.out' }, '-=0.95')
+      .fromTo([news, hint], { opacity: 0 }, { opacity: 1, duration: 1.2 }, '-=0.6');
   };
 
   return {
     playIntro: intro,
     showIntroInstant() {
       flight.revealTitle(0.01);
+      flight.playEnter();
       gsap.set([...chars, sub, cta, news, hint], { opacity: 1 });
     },
   };
