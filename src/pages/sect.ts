@@ -1,6 +1,7 @@
 import { GAME } from '../data/game-data.js';
 import { sectSmall } from '../data/assets';
-import { mountSectDial } from '../home/sects';
+import { RACE_META } from '../data/race';
+import { mountSectGallery } from '../home/sects';
 import { scrollToEl } from '../lib/motion';
 import { finishPage, gsap, page, reduced, startPage } from './shell';
 
@@ -28,17 +29,17 @@ page().innerHTML = `
     <ul class="sect-grid" id="sect-grid">
       ${GAME.sects.map((s: Sect) => `
         <li data-name="${s.name}">
-          <button type="button" aria-label="查看${s.name}">
+          <button class="holo" type="button" aria-label="查看${s.name}">
             <img src="${sectSmall(s.name)}" alt="" loading="lazy" decoding="async" />
             <span class="sg-text"><b>${s.name}</b><small>${s.tag}</small></span>
-            <span class="seal">${s.race}</span>
+            <span class="badge" style="--accent:var(--${RACE_META[s.race].key})">${s.race}</span>
           </button>
         </li>`).join('')}
     </ul>
   </section>
 `;
 
-const dial = mountSectDial(document.querySelector<HTMLElement>('#sects')!);
+const gallery = mountSectGallery(document.querySelector<HTMLElement>('#sects')!);
 const items = [...document.querySelectorAll<HTMLElement>('#sect-grid li')];
 const tabs = [...document.querySelectorAll<HTMLButtonElement>('.sect-grid-sec .filter-bar button')];
 
@@ -59,7 +60,7 @@ tabs.forEach((tab) =>
 document.querySelector('#sect-grid')!.addEventListener('click', (e) => {
   const li = (e.target as Element).closest<HTMLElement>('li[data-name]');
   if (!li) return;
-  dial.select(li.dataset.name!);
+  gallery.select(li.dataset.name!);
   scrollToEl('#sects');
 });
 

@@ -33,15 +33,18 @@ export function scrollToEl(target: string | HTMLElement, offset = 0) {
   else el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
 }
 
-/** 把一段中文拆成单字 span，供描金入场使用；读屏仍读整句。 */
+/** 把一段中文拆成单字 span，供入场动画使用；读屏仍读整句。 */
 export function splitChars(el: HTMLElement) {
   const text = el.textContent ?? '';
+  const list = [...text];
   el.setAttribute('aria-label', text);
   el.innerHTML = '';
-  const chars = [...text].map((c) => {
+  el.style.setProperty('--n', String(list.length));
+  const chars = list.map((c, i) => {
     const s = document.createElement('span');
     s.className = 'ch';
     s.setAttribute('aria-hidden', 'true');
+    s.style.setProperty('--i', String(i));
     s.textContent = c;
     // 展示字号下全角逗号太散，只留一段气口；读屏仍读整句
     if (c === '，') s.classList.add('ch-gap');
@@ -51,20 +54,26 @@ export function splitChars(el: HTMLElement) {
   return chars;
 }
 
-/** 滚动进入视口时，单字由模糊的金色落回正常，整页只用于主标题级别的文字。 */
+/** 滚动进入视口时，单字从遮罩下方依次滑出，只用于主标题级别的文字。 */
 export function revealTitle(el: HTMLElement) {
   const chars = splitChars(el);
+  el.classList.add('grad');
   if (reduced) return;
   gsap.from(chars, {
-    scrollTrigger: { trigger: el, start: 'top 82%' },
-    opacity: 0,
-    y: 26,
-    filter: 'blur(10px)',
-    color: '#f6e3a8',
-    duration: 1.1,
-    ease: 'power3.out',
-    stagger: 0.07,
+    scrollTrigger: { trigger: el, start: 'top 86%' },
+    yPercent: 112,
+    duration: 1.5,
+    ease: 'expo.out',
+    stagger: 0.06,
   });
+}
+
+/** 图片揭开：容器从下往上裁开，里面的图同时由大缩回。 */
+export function revealImage(el: HTMLElement, start = 'top 86%') {
+  if (reduced) return;
+  const img = el.querySelector('img');
+  gsap.fromTo(el, { clipPath: 'inset(100% 0 0 0)' }, { clipPath: 'inset(0% 0 0 0)', duration: 1.7, ease: 'expo.inOut', scrollTrigger: { trigger: el, start } });
+  if (img) gsap.fromTo(img, { scale: 1.26 }, { scale: 1, duration: 2.4, ease: 'expo.out', scrollTrigger: { trigger: el, start } });
 }
 
 /** 当前窗口内才跑的渲染循环 */

@@ -19,7 +19,7 @@ page().innerHTML = `
     </div>
     <div class="equip-grid">
       <ul class="equip-cards" id="equip-cards"></ul>
-      <article class="equip-detail" id="equip-detail" aria-live="polite"></article>
+      <article class="equip-detail glass" id="equip-detail" aria-live="polite"></article>
     </div>
     <p class="equip-note">打造体系：武器由「打造技巧」锻造，头盔、衣服由「裁缝技巧」缝制，项链、腰带、鞋子由「炼金术」炼成。自 10 级至 160 级，级级有名器。</p>
   </section>
@@ -32,7 +32,7 @@ let cat: 'weapon' | 'armor' = 'weapon';
 
 const animateDetail = () => {
   if (reduced) return;
-  gsap.fromTo(detail.querySelector('.ed-art'), { opacity: 0, scale: 0.8, rotate: -6 }, { opacity: 1, scale: 1, rotate: 0, duration: 0.9, ease: 'power3.out' });
+  gsap.fromTo(detail.querySelector('.ed-art'), { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 1.1, ease: 'expo.out' });
   gsap.fromTo(detail.querySelectorAll('.ed-list li'), { opacity: 0, x: 16 }, { opacity: 1, x: 0, stagger: 0.022, duration: 0.5, ease: 'power2.out' });
 };
 

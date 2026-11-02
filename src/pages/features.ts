@@ -20,7 +20,7 @@ page().innerHTML = `
   <section class="fp-list" id="fp-list">
     ${FEATURES.map((f, i) => `
       <article class="fp" data-cat="${f.cat}">
-        <figure data-unroll="${i % 2 ? 'right' : 'left'}"><img src="${featImg(f.key)}" alt="${f.title}" loading="lazy" decoding="async" /></figure>
+        <div class="fp-frame holo" data-pop="${i % 2 ? 'right' : 'left'}"><figure><img src="${featImg(f.key)}" alt="${f.title}" loading="lazy" decoding="async" /></figure></div>
         <div class="fp-text">
           <span class="fp-label">${f.label}</span>
           <h2>${f.title}</h2>

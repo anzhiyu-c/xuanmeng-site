@@ -1,64 +1,59 @@
-/* 金碧山水配色：全部来自传统矿物颜料的名字，而不是常见的黑金 */
-@import '@fontsource/zcool-xiaowei/400.css';
-@import 'lxgw-wenkai-webfont/lxgwwenkai-regular.css';
-
-/* 站酷小薇的「回、徊、赐」三字内轮廓方向有误，内部被填实。这里用修正过轮廓的小字体优先覆盖 */
-@font-face {
-  font-family: 'ZCOOL XiaoWei Fix';
-  src: url(/fonts/xm-display-fix.woff2) format('woff2');
-  unicode-range: U+56DE, U+5F8A, U+8D50;
-  font-display: swap;
-}
+/* 珍珠白、香槟金、深靛蓝：亮而克制，高级感来自层次和动效，不来自颜色的数量 */
+@import '@fontsource/noto-sans-sc/400.css';
+@import '@fontsource/noto-sans-sc/500.css';
+@import '@fontsource/noto-sans-sc/700.css';
+@import '@fontsource/noto-serif-sc/700.css';
 
 :root {
-  --xuan: #081627;        /* 玄青：页面底色 */
-  --xuan-2: #0e2240;      /* 玄青亮一档：面板底 */
-  --azurite: #1a4a8f;     /* 石青 */
-  --azurite-hi: #3b7bd1;
-  --malachite: #1f8a78;   /* 石绿 */
-  --gold: #d8b36a;        /* 泥金 */
-  --gold-hi: #f6e3a8;
-  --gold-lo: #8d6a2f;
-  --cinnabar: #c8321f;    /* 朱砂 */
-  --silk: #eadfc6;        /* 绢色 */
-  --silk-2: #d9c9a3;
-  --ink-on-silk: #2a2318;
-  --text: #ecE4d0;
-  --text-dim: rgba(236, 228, 208, .68);
-  --line: rgba(216, 179, 106, .28);
+  --pearl: #fbfaf6;
+  --mist: #eef1f7;
+  --gold: #8a6a2a;        /* 浅底上的金色小字 */
+  --gold-2: #c9a65c;
+  --gold-hi: #f1e0b4;
+  --ink: #1c2350;         /* 标题 */
+  --ink-2: #3f4568;       /* 正文 */
+  --ink-3: #6b7090;       /* 次要文字 */
+  --line: rgba(168, 131, 60, .32);
+  --gold-line: linear-gradient(115deg, #e9d6a3, #b8924a 38%, #f1e0b4 62%, #b08a42);
+  --title-grad: linear-gradient(100deg, #161c47, #2b3478 60%, #4a4a9c);
+  --glass: rgba(255, 255, 255, .78);
 
-  /* 三界各自的主色，切换界别时覆盖 --realm 系列 */
-  --realm: var(--azurite-hi);
-  --realm-deep: #0d2a55;
+  /* 三界主色，切换界别时覆盖 --accent */
+  --xian: #3a6ea8;
+  --ren: #b5692a;
+  --mo: #8e3a6b;
+  --accent: var(--xian);
 
-  --display: 'ZCOOL XiaoWei Fix', 'ZCOOL XiaoWei', 'Songti SC', 'STSong', 'SimSun', serif;
-  --body: 'LXGW WenKai', 'Kaiti SC', 'STKaiti', 'KaiTi', serif;
+  --display: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
+  --body: 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 
   --gutter: clamp(16px, 4vw, 64px);
   --nav-h: 72px;
   --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-soft: cubic-bezier(.22, .61, .36, 1);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
   -webkit-text-size-adjust: 100%;
-  background: var(--xuan);
-  color-scheme: dark;
+  background: var(--mist);
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  background: var(--xuan);
-  color: var(--text);
+  background: linear-gradient(180deg, #eef1f7, #f6f4ee 60%, #f4efe4);
+  background-attachment: fixed;
+  color: var(--ink-2);
   font-family: var(--body);
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1.85;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4 { font-family: var(--display); font-weight: 400; margin: 0; line-height: 1.25; }
+h1, h2, h3, h4 { font-family: var(--display); font-weight: 700; margin: 0; line-height: 1.25; color: var(--ink); }
 p { margin: 0; }
 a { color: inherit; text-decoration: none; }
 a[data-href] { cursor: pointer; }
@@ -66,7 +61,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 img, canvas { display: block; max-width: 100%; }
 ul { margin: 0; padding: 0; list-style: none; }
 
-:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
@@ -74,87 +69,191 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 
 .ch { display: inline-block; }
+.ch-gap { width: .5em; visibility: hidden; }
+[hidden] { display: none !important; }
 
-/* 竖排题字：国画题跋的做法，取代“小标题 + 英文”的模板写法 */
-.inscription {
-  writing-mode: vertical-rl;
-  font-family: var(--display);
-  letter-spacing: .32em;
-  line-height: 1.5;
+/* 大标题：按字切片取渐变，单字动画时颜色仍然连贯 */
+/* 标题从遮罩里滑出：外层裁切，留一点余量免得切到笔画 */
+[data-reveal-title], .mask { overflow: clip; overflow-clip-margin: .12em; }
+.grad .ch, .grad.plain {
+  background: var(--title-grad);
+  background-size: calc(var(--n, 1) * 100%) 100%;
+  background-position: calc(var(--i, 0) / max(var(--n, 1) - 1, 1) * 100%) 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
+.grad.plain { background-size: 100% 100%; }
 
-/* 朱印：只用于标记三界归属，是信息不是装饰 */
-.seal {
+/* 区块标题：一条金线从标题两侧展开 */
+.sec-head { display: flex; align-items: center; gap: 22px; }
+.sec-head h2 { font-size: clamp(38px, 4.6vw, 70px); letter-spacing: .06em; }
+.sec-head::before, .sec-head::after {
+  content: '';
+  flex: none;
+  width: clamp(28px, 7vw, 120px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-2));
+}
+.sec-head::after { transform: scaleX(-1); }
+
+/* 三界标记：描金小牌 */
+.badge {
   display: inline-grid;
   place-items: center;
-  width: 1.9em;
-  height: 1.9em;
-  background: var(--cinnabar);
-  color: #fbeee0;
-  font-family: var(--display);
-  border-radius: 3px 5px 4px 6px;
-  box-shadow: inset 0 0 0 1px rgba(255, 240, 220, .28);
+  width: 2em;
+  height: 2em;
+  color: #fff;
+  font-weight: 700;
   line-height: 1;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px #fff, 0 0 0 2px var(--gold-2);
 }
 
-/* 主按钮：一块金箔，鼠标扫过时反光 */
+/* 珍珠玻璃面板：一道金色细线 */
+.glass {
+  position: relative;
+  background: var(--glass);
+  backdrop-filter: blur(20px) saturate(1.2);
+  border-radius: 6px;
+  box-shadow: 0 24px 60px -24px rgba(28, 35, 80, .4), inset 0 0 0 1px rgba(255, 255, 255, .7);
+}
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: var(--gold-line);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+
+/* 按钮：一块香槟金，鼠标扫过时一道缓慢的反光 */
 .btn {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 52px;
-  padding: 0 32px;
-  font-family: var(--display);
-  font-size: 18px;
-  letter-spacing: .14em;
+  padding: 0 34px;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: .16em;
+  white-space: nowrap;
   overflow: hidden;
   isolation: isolate;
-  transition: transform .5s var(--ease-out), color .3s;
+  border-radius: 3px;
+  transition: box-shadow .6s var(--ease-out), background-color .4s, color .4s;
 }
-.btn-gold {
-  color: #2a1a05;
-  background: linear-gradient(115deg, #b98a3f, #f6e3a8 42%, #d8b36a 62%, #a87a33);
-  box-shadow: 0 10px 34px -10px rgba(216, 179, 106, .75), inset 0 0 0 1px rgba(255, 245, 210, .55);
-  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-}
-.btn-gold::after {
+.btn::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .85) 50%, transparent 65%);
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .65) 50%, transparent 65%);
   transform: translateX(-120%);
+  transition: transform 1.2s var(--ease-out);
+}
+.btn:hover::after { transform: translateX(120%); }
+.btn-gold {
+  color: #2a2010;
+  background: linear-gradient(115deg, #d9bd7c, #f1e0b4 45%, #cfae68);
+  box-shadow: 0 14px 30px -14px rgba(140, 105, 40, .75), inset 0 0 0 1px rgba(255, 255, 255, .5);
+}
+.btn-gold:hover { box-shadow: 0 20px 38px -14px rgba(140, 105, 40, .9), inset 0 0 0 1px rgba(255, 255, 255, .7); }
+.btn-ghost {
+  color: var(--ink);
+  background: rgba(255, 255, 255, .72);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 0 0 1px var(--gold-2);
+}
+.btn-ghost:hover { background: #fff; }
+.btn.is-disabled { cursor: not-allowed; opacity: .72; transform: none; }
+.btn.is-disabled::after { display: none; }
+
+/* 卡片：鼠标位置驱动轻微倾斜和一层柔光，见 lib/holo.ts */
+.holo {
+  --mx: 50%;
+  --my: 50%;
+  --rx: 0deg;
+  --ry: 0deg;
+  --on: 0;
+  position: relative;
+  transform: perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry));
   transition: transform .9s var(--ease-out);
 }
-.btn-gold:hover { transform: translateY(-2px); }
-.btn-gold:hover::after { transform: translateX(120%); }
-.btn-ghost {
-  color: var(--gold-hi);
-  box-shadow: inset 0 0 0 1px var(--line);
-  backdrop-filter: blur(6px);
-  background: rgba(8, 22, 39, .32);
-}
-.btn-ghost:hover { box-shadow: inset 0 0 0 1px var(--gold); transform: translateY(-2px); }
-.btn.is-disabled {
-  cursor: not-allowed;
-  filter: saturate(.55) brightness(.82);
-  transform: none;
+.holo:hover { transition-duration: .35s; }
+.holo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--on);
+  background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, .42), transparent 55%);
+  transition: opacity .6s;
 }
 
-/* 水墨切页层 */
-#ink {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 200;
+/* 法阵：描金细线，三层缓慢反向转动 */
+.magic { position: absolute; pointer-events: none; }
+.magic svg { width: 100%; height: 100%; overflow: visible; }
+.magic g { transform-box: view-box; transform-origin: center; }
+.magic .m-a { animation: m-spin 120s linear infinite; }
+.magic .m-b { animation: m-spin 90s linear infinite reverse; }
+.magic .m-c { animation: m-spin 70s linear infinite; }
+@keyframes m-spin { to { transform: rotate(360deg); } }
+
+/* 区块之间的云带 */
+.cloud-edge {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: clamp(120px, 24vw, 380px);
+  background: url(/img/scene/cloud_band.webp) center bottom / 100% 100% no-repeat;
   pointer-events: none;
+  will-change: transform;
 }
+
+/* 跟随光标：一圈细线，滑过可点击的元素时撑开 */
+.cursor {
+  position: fixed;
+  z-index: 190;
+  left: 0;
+  top: 0;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  border: 1px solid rgba(138, 106, 42, .7);
+  pointer-events: none;
+  opacity: 0;
+  transition: width .7s var(--ease-out), height .7s var(--ease-out), margin .7s var(--ease-out), background-color .5s, opacity .5s;
+}
+.cursor.is-on { opacity: 1; }
+.cursor.is-hover { width: 72px; height: 72px; margin: -36px 0 0 -36px; background: rgba(255, 255, 255, .22); }
+
+/* 页面滚动进度：顶部一道金线 */
+.scroll-bar {
+  position: fixed;
+  z-index: 110;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+/* 切页光幕与全屏光点 */
+#wipe { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 200; pointer-events: none; }
+#fx { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 150; pointer-events: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
-
-[hidden] { display: none !important; }
-.ch-gap { width: .5em; visibility: hidden; }

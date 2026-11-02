@@ -15,21 +15,20 @@ export function startPage() {
 
 export const page = () => document.querySelector<HTMLElement>('#page')!;
 
-/** 内页题头：整幅绘画缓慢推进，标题逐字显影 */
-export function pageHero(opts: { title: string; sub: string; image: string; seal?: string }) {
+/** 内页题头：整幅画面缓慢推进，标题逐字升起 */
+export function pageHero(opts: { title: string; sub: string; image: string }) {
   return `
     <header class="page-hero">
       <div class="page-hero-art" style="background-image:url(${opts.image})"></div>
       <div class="page-hero-veil"></div>
       <div class="page-hero-copy">
-        ${opts.seal ? `<span class="seal">${opts.seal}</span>` : ''}
         <h1 data-reveal-title>${opts.title}</h1>
         <p>${opts.sub}</p>
       </div>
     </header>`;
 }
 
-/** 页面内容渲染后调用：接上题头视差、标题显影和图片展卷 */
+/** 页面内容渲染后调用：接上题头视差、标题入场和图片揭开 */
 export function finishPage(root: ParentNode = document) {
   root.querySelectorAll<HTMLElement>('[data-reveal-title]').forEach(revealTitle);
   if (reduced) return;
@@ -44,16 +43,16 @@ export function finishPage(root: ParentNode = document) {
     });
   }
 
-  // 画作像卷轴一样从一侧展开，内部同时缓缓归位
-  root.querySelectorAll<HTMLElement>('[data-unroll]').forEach((el) => {
+  // 图片从一侧被揭开，内部同时缓缓归位
+  root.querySelectorAll<HTMLElement>('[data-pop]').forEach((el) => {
     const img = el.querySelector('img');
-    const fromLeft = el.dataset.unroll === 'left';
+    const fromLeft = el.dataset.pop === 'left';
     gsap.fromTo(
       el,
       { clipPath: fromLeft ? 'inset(0 100% 0 0)' : 'inset(0 0 0 100%)' },
-      { clipPath: 'inset(0 0% 0 0%)', duration: 1.5, ease: 'power3.inOut', scrollTrigger: { trigger: el, start: 'top 82%' } },
+      { clipPath: 'inset(0 0% 0 0%)', duration: 1.6, ease: 'expo.inOut', scrollTrigger: { trigger: el, start: 'top 84%' } },
     );
-    if (img) gsap.fromTo(img, { scale: 1.24 }, { scale: 1, duration: 2, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 82%' } });
+    if (img) gsap.fromTo(img, { scale: 1.2 }, { scale: 1, duration: 2.2, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 84%' } });
   });
   ScrollTrigger.refresh();
 }

@@ -1,5 +1,8 @@
-// 全站公共外壳：导航、页脚、下载配置注入、水墨切页、隐匿链接
-import { createInk, type InkWash } from '../gl/ink';
+// 全站公共外壳：导航、页脚、下载配置注入、虹彩切页、星屑、隐匿链接
+import { createWipe, type Wipe } from '../gl/wipe';
+import { initCursor } from './cursor';
+import { initFx } from './fx';
+import { initHolo } from './holo';
 import { reduced, scrollToEl, startScroll, stopScroll } from './motion';
 
 export interface SiteConfig {
@@ -51,8 +54,7 @@ function renderChrome() {
   header.className = 'site-nav';
   header.innerHTML = `
     <a class="brand" href="/" aria-label="玄梦 ONLINE 首页">
-      <img src="/img/logo-mark.webp" alt="" width="40" height="44" />
-      <span class="brand-name">玄梦</span>
+      <img src="/img/logo-mark.webp" alt="" />
     </a>
     <nav class="nav-links" id="nav-links" aria-label="主导航">
       ${NAV.map(([href, label]) => `<a href="${href}"${here === href ? ' aria-current="page"' : ''}><span>${label}</span></a>`).join('')}
@@ -180,10 +182,10 @@ function stealthLinks(go: (url: string, newTab: boolean) => void) {
 }
 
 let lastPoint: [number, number] = [0.5, 0.5];
-let ink: InkWash | null = null;
+let wipe: Wipe | null = null;
 
-export function getInk() {
-  return ink;
+export function getWipe() {
+  return wipe;
 }
 
 export function initChrome() {
@@ -191,11 +193,14 @@ export function initChrome() {
   applyDownloadConfig();
 
   const canvas = document.createElement('canvas');
-  canvas.id = 'ink';
+  canvas.id = 'wipe';
   canvas.setAttribute('aria-hidden', 'true');
   document.body.append(canvas);
-  ink = reduced ? null : createInk(canvas);
-  if (!ink) canvas.style.display = 'none';
+  wipe = reduced ? null : createWipe(canvas);
+  if (!wipe) canvas.style.display = 'none';
+  initFx();
+  initHolo();
+  initCursor();
 
   const navigate = async (url: string, newTab: boolean) => {
     if (newTab) {
@@ -207,20 +212,20 @@ export function initChrome() {
       return;
     }
     setMenu(false);
-    if (ink) await ink.cover({ from: lastPoint });
+    if (wipe) await wipe.cover({ from: lastPoint });
     window.location.href = url;
   };
   stealthLinks(navigate);
 
-  // 从缓存恢复页面时，切页墨层不能留在屏幕上
+  // 从缓存恢复页面时，切页光幕不能留在屏幕上
   window.addEventListener('pageshow', (e) => {
-    if (e.persisted && ink) ink.reveal({ duration: 1 });
+    if (e.persisted && wipe) wipe.reveal({ duration: 1 });
   });
 }
 
-/** 内页入场：墨从中心散开 */
+/** 内页入场：光幕从中心打开 */
 export function pageEnter() {
-  if (!ink) return Promise.resolve();
-  ink.fill();
-  return ink.reveal({ duration: 1.4 });
+  if (!wipe) return Promise.resolve();
+  wipe.fill();
+  return wipe.reveal({ duration: 1.3 });
 }

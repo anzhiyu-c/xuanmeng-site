@@ -1,4 +1,4 @@
-// 全屏水墨遮罩：墨滴晕开时露出页面，边缘带一圈泥金。
+// 全屏光幕：珍珠色的幕布上开一个洞，洞口一道柔和的香槟金。
 // 进站与切页共用。不依赖 three.js，保证它在所有资源之前就能跑起来。
 import gsap from 'gsap';
 
@@ -19,7 +19,7 @@ float noise(vec2 p){
 }
 float fbm(vec2 p){
   float v = 0., a = .5;
-  for(int i = 0; i < 6; i++){ v += a*noise(p); p = p*2.03 + 17.; a *= .5; }
+  for(int i = 0; i < 5; i++){ v += a*noise(p); p = p*2.03 + 17.; a *= .5; }
   return v;
 }
 
@@ -27,44 +27,36 @@ void main(){
   vec2 uv = gl_FragCoord.xy / uRes;
   vec2 asp = vec2(uRes.x/uRes.y, 1.);
   vec2 p = uv*asp;
+  vec2 q = p - uC*asp;
 
-  // 主墨滴加两朵伴生的小墨，晕开不是一个正圆
-  float n = fbm(p*2.6 + uT*.04);
-  float m = fbm(p*7.0 - uT*.03);
-  float d1 = length(p - uC*asp);
-  float d2 = length(p - (uC + vec2(.28, -.2))*asp) + .34;
-  float d3 = length(p - (uC + vec2(-.3, .16))*asp) + .48;
-  float d = min(d1, min(d2, d3));
-  d += (n - .5)*.55 + (m - .5)*.11;
+  float n = fbm(p*1.6 + uT*.03);
+  float d = length(q) + (n - .5)*.14;
 
-  float maxR = length(asp) * 1.45;
-  float edge = uP * maxR - .12;
+  float maxR = length(asp)*1.3;
+  float edge = uP*maxR - .1;
+  float hole = smoothstep(edge - .05, edge + .05, d);
 
-  float hole = smoothstep(edge - .012, edge + .006, d);
+  // 幕布：珍珠底加很淡的云纹
+  vec3 col = mix(vec3(.965,.96,.94), vec3(.9,.915,.95), fbm(p*1.2 + 3.));
 
-  // 玄青墨底，略带石青的层次
-  vec3 ink = mix(vec3(.027,.063,.118), vec3(.043,.106,.2), fbm(p*1.4 + 3.));
-  ink *= .78 + .35*m;
-
-  // 泥金描边：墨线外沿烧出一圈金
-  float band = 1. - smoothstep(.0, .085, abs(d - edge - .03));
-  vec3 gold = mix(vec3(.72,.5,.2), vec3(1.,.9,.62), n);
-  vec3 col = mix(ink, gold*1.15, band*band*.95);
+  // 洞口一道柔和的香槟金
+  float band = 1. - smoothstep(.0, .2, abs(d - edge - .08));
+  col = mix(col, vec3(.93,.84,.64), band*band*.8);
 
   gl_FragColor = vec4(col*hole, hole);
 }`;
 
-export interface InkWash {
+export interface Wipe {
   canvas: HTMLCanvasElement;
-  /** 打开：墨散开露出页面 */
+  /** 打开：洞从中心长到全屏，露出页面 */
   reveal(opts?: { from?: [number, number]; duration?: number }): Promise<void>;
-  /** 合上：墨从一点漫到全屏 */
+  /** 合上：洞缩回一点，幕布盖住页面 */
   cover(opts?: { from?: [number, number]; duration?: number }): Promise<void>;
   /** 立即铺满，不做动画 */
   fill(): void;
 }
 
-export function createInk(canvas: HTMLCanvasElement): InkWash | null {
+export function createWipe(canvas: HTMLCanvasElement): Wipe | null {
   const gl = canvas.getContext('webgl', { premultipliedAlpha: true, alpha: true, antialias: false });
   if (!gl) return null;
 
@@ -134,15 +126,14 @@ export function createInk(canvas: HTMLCanvasElement): InkWash | null {
 
   return {
     canvas,
-    // reveal：洞从 0 长到全屏；cover：洞从全屏缩回 0
-    reveal: ({ from, duration = 2.1 } = {}) => {
+    reveal: ({ from, duration = 1.9 } = {}) => {
       state.p = 0;
       canvas.style.display = 'block';
       return run(1, from, duration, 'power2.inOut').then(() => {
         canvas.style.display = 'none';
       });
     },
-    cover: ({ from, duration = 0.85 } = {}) => {
+    cover: ({ from, duration = 0.9 } = {}) => {
       state.p = 1;
       canvas.style.display = 'block';
       return run(0, from, duration, 'power2.in');

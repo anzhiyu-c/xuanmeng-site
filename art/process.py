@@ -9,13 +9,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+from PIL import Image, ImageChops, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / 'art/raw'
 OUT = ROOT / 'public/img'
 HELPER = Path(os.environ.get('CODEX_HOME', Path.home() / '.codex')) / 'skills/.system/imagegen/scripts/remove_chroma_key.py'
 KEYED = ROOT / 'art/raw/keyed'
+# 当前选用的标题款式，对应 art/raw/logo_<款式>.png
+LOGO = os.environ.get('XM_LOGO', 'royal')
 
 
 def has_alpha(im):
@@ -25,9 +27,10 @@ def has_alpha(im):
 
 
 def clean_alpha(im: Image.Image) -> Image.Image:
-    """生成图的背景残留 1~15 的透明度，叠投影后会显脏。低于 16 归零，其余线性拉回满量程。"""
+    """生成图常带一圈半透明光晕，放到亮色背景上会发脏。低于 LOW 归零，其余线性拉回满量程。"""
+    LOW = 40
     im = im.convert('RGBA')
-    im.putalpha(im.getchannel('A').point(lambda v: 0 if v < 16 else min(255, round((v - 16) * 255 / 224))))
+    im.putalpha(im.getchannel('A').point(lambda v: 0 if v < LOW else min(255, round((v - LOW) * 255 / (240 - LOW)))))
     return im
 
 
@@ -40,11 +43,48 @@ def cutout(src: Path) -> Image.Image:
     if not out.exists() or out.stat().st_mtime < src.stat().st_mtime:
         out.unlink(missing_ok=True)
         subprocess.run(
-            [sys.executable, str(HELPER), '--input', str(src), '--out', str(out), '--auto-key', 'border', '--soft-matte',
+            # 底色固定是洋红。不能从边缘取色：前景图的屋檐和柳枝贴着边，取到的就不是底色了
+            [sys.executable, str(HELPER), '--input', str(src), '--out', str(out), '--auto-key', 'none', '--key-color', '#ff00ff', '--soft-matte',
              '--transparent-threshold', '12', '--opaque-threshold', '220', '--despill'],
             check=True, stdout=subprocess.DEVNULL,
         )
-    return clean_alpha(Image.open(out))
+    keyed = Image.open(out).convert('RGBA')
+    check_keyed(keyed, src.name)
+    return clean_alpha(keyed)
+
+
+def check_keyed(im, name):
+    """抠图失败时整张底色都还在，放到网站上就是满屏洋红，这里直接报错。"""
+    small = im.copy()
+    small.thumbnail((200, 200))
+    px = list(small.get_flattened_data())
+    left = sum(1 for r, g, b, a in px if a > 200 and r > 190 and b > 190 and g < 90) / len(px)
+    if left > 0.005:
+        raise SystemExit(f'{name} 抠图失败：还有 {left:.1%} 的不透明洋红')
+
+
+def defringe(im, soft_only=False):
+    """抠洋红底时，云雾这类半透明处会残留紫边。把红蓝里高出绿色的部分减掉，紫就回到中性色。
+    soft_only 只处理半透明像素，用于画面本身带暗红的魔界。"""
+    r, g, b, a = im.convert('RGBA').split()
+    excess = ImageChops.subtract(ImageChops.darker(r, b), g)
+    if soft_only:
+        excess = ImageChops.multiply(excess, a.point(lambda v: 255 if v < 250 else 0))
+    return Image.merge('RGBA', (ImageChops.subtract(r, excess), g, ImageChops.subtract(b, excess), a))
+
+
+def navy_logo(im):
+    """标题的紫色收成全站的深靛蓝，金边不动。"""
+    a = im.getchannel('A')
+    h, sat, v = im.convert('RGB').convert('HSV').split()
+    # PIL 的色相是 0~255：紫到品红约在 165~225，统一转到靛蓝 165
+    purple = h.point(lambda x: 255 if 165 <= x <= 225 else 0)
+    h = Image.composite(Image.new('L', im.size, 165), h, purple)
+    sat = Image.composite(sat.point(lambda x: round(x * 0.82)), sat, purple)
+    v = Image.composite(v.point(lambda x: round(x * 0.74)), v, purple)
+    out = Image.merge('HSV', (h, sat, v)).convert('RGBA')
+    out.putalpha(a)
+    return out
 
 
 def fit(im, long_side=None, width=None):
@@ -58,7 +98,7 @@ def fit(im, long_side=None, width=None):
     size = (round(w * scale), round(h * scale))
     res = im.resize(size, Image.LANCZOS)
     if scale > 1:
-        # 放大后补一点锐度，矿物颜料的笔触才不会糊
+        # 放大后补一点锐度，线条才不会糊
         res = res.filter(ImageFilter.UnsharpMask(radius=2, percent=60, threshold=2))
     return res
 
@@ -85,74 +125,70 @@ def trim(im):
 
 # 头部中心（占图宽、图高的比例）与取景大小（占图高的比例），对照立绘逐张标定
 FACES = {
-    '偃无师': (.475, .083, .16), '剑侠客': (.65, .15, .16), '巨魔王': (.5, .167, .19), '巫蛮儿': (.5, .115, .16),
-    '杀破狼': (.45, .233, .16), '桃夭夭': (.5, .165, .16), '狐美人': (.485, .15, .16), '玄彩娥': (.5, .13, .16),
-    '神天兵': (.49, .185, .17), '羽灵神': (.515, .12, .16), '舞天姬': (.435, .215, .16), '英女侠': (.515, .117, .16),
-    '虎头怪': (.44, .165, .2), '逍遥生': (.475, .13, .16), '飞燕女': (.65, .165, .16), '骨精灵': (.56, .13, .16),
-    '鬼潇潇': (.5, .165, .16), '龙太子': (.525, .215, .16),
+    '偃无师': (.54, .24, .3), '剑侠客': (.56, .33, .32), '巨魔王': (.525, .33, .27), '巫蛮儿': (.525, .35, .3),
+    '桃夭夭': (.525, .35, .3), '狐美人': (.55, .33, .28), '玄彩娥': (.55, .35, .28), '神天兵': (.535, .39, .28),
+    '羽灵神': (.5, .29, .26), '舞天姬': (.525, .34, .26), '虎头怪': (.475, .36, .26), '逍遥生': (.54, .32, .28),
+    '飞燕女': (.525, .36, .3), '骨精灵': (.5, .32, .28), '鬼潇潇': (.5, .34, .26), '龙太子': (.525, .34, .28),
 }
+FACE_DEFAULT = (.5, .33, .28)
 
 
 def face_thumb(im, name, size=132):
-    cx, cy, k = FACES[name]
+    cx, cy, k = FACES.get(name, FACE_DEFAULT)
     side = int(im.height * k)
     left = int(cx * im.width - side / 2)
     top = int(cy * im.height - side / 2)
     crop = im.crop((left, top, left + side, top + side)).resize((size, size), Image.LANCZOS)
-    bg = Image.new('RGBA', crop.size, (14, 34, 64, 255))
+    bg = Image.new('RGBA', crop.size, (236, 242, 255, 255))
     bg.alpha_composite(crop)
     return bg.convert('RGB')
 
 
-# 图集不是严格网格，这里是每件武器在 1536×1024 原图上的位置
-WEAPON_BOXES = {
-    '剑': (85, 5, 185, 345), '刀': (295, 5, 435, 345), '枪矛': (555, 5, 710, 345), '斧钺': (725, 5, 895, 345),
-    '锤': (980, 5, 1170, 345), '扇': (1215, 5, 1515, 345), '环圈': (20, 345, 300, 660), '双剑': (330, 345, 500, 660),
-    '鞭': (555, 345, 775, 650), '爪刺': (820, 345, 995, 640), '法杖': (1140, 330, 1225, 665), '魔棒': (1385, 340, 1450, 650),
-    '飘带': (20, 655, 310, 1000), '弓弩': (360, 640, 490, 1010), '宝珠': (570, 710, 775, 930), '巨剑': (865, 645, 980, 985),
-    '伞': (1005, 670, 1315, 1005), '灯笼': (1350, 640, 1490, 1000),
-}
+# 图集从左到右、从上到下的顺序，和 manifest 里的提示词一致
+WEAPONS = ['剑', '刀', '枪矛', '斧钺', '锤', '扇', '环圈', '双剑', '鞭', '爪刺', '法杖', '魔棒', '飘带', '弓弩', '宝珠', '巨剑', '伞', '灯笼']
 
 
-def drop_specks(im, keep=0.03):
-    """去掉面积不足最大连通块 keep 比例的碎屑（相邻武器混进来的边角）。"""
+def weapon_slices(sheet):
+    """把图集切成 18 件。先找出所有连通块，按中心点落在 6×3 的哪一格归类（双剑这种两块的归到同一件），
+    再只保留属于这一格的像素，邻居伸过来的边角不会混进来。"""
     k = 3
-    small = im.getchannel('A').resize((im.width // k, im.height // k), Image.BILINEAR).point(lambda v: 255 if v > 40 else 0)
-    w, h = small.size
-    px = small.load()
-    label = [[0] * w for _ in range(h)]
-    sizes = {}
-    cur = 0
+    mask = sheet.getchannel('A').resize((sheet.width // k, sheet.height // k), Image.BILINEAR).point(lambda v: 255 if v > 40 else 0)
+    w, h = mask.size
+    px = mask.load()
+    seen = [[False] * w for _ in range(h)]
+    cells = {}
     for y in range(h):
         for x in range(w):
-            if px[x, y] and not label[y][x]:
-                cur += 1
-                label[y][x] = cur
-                stack = [(x, y)]
-                n = 0
-                while stack:
-                    a, b = stack.pop()
-                    n += 1
-                    for na, nb in ((a + 1, b), (a - 1, b), (a, b + 1), (a, b - 1)):
-                        if 0 <= na < w and 0 <= nb < h and px[na, nb] and not label[nb][na]:
-                            label[nb][na] = cur
-                            stack.append((na, nb))
-                sizes[cur] = n
-    if not sizes:
-        return im
-    biggest = max(sizes.values())
-    small_ids = {i for i, n in sizes.items() if n < biggest * keep}
-    if not small_ids:
-        return im
-    mask = Image.new('L', (w, h), 255)
-    mp = mask.load()
-    for y in range(h):
-        for x in range(w):
-            if label[y][x] in small_ids:
-                mp[x, y] = 0
-    mask = mask.filter(ImageFilter.MinFilter(3)).resize(im.size, Image.NEAREST)
-    out = im.copy()
-    out.putalpha(Image.composite(im.getchannel('A'), Image.new('L', im.size, 0), mask))
+            if not px[x, y] or seen[y][x]:
+                continue
+            seen[y][x] = True
+            stack = [(x, y)]
+            points = []
+            while stack:
+                a, b = stack.pop()
+                points.append((a, b))
+                for na, nb in ((a + 1, b), (a - 1, b), (a, b + 1), (a, b - 1)):
+                    if 0 <= na < w and 0 <= nb < h and px[na, nb] and not seen[nb][na]:
+                        seen[nb][na] = True
+                        stack.append((na, nb))
+            if len(points) < 30:
+                continue
+            cx = sum(p[0] for p in points) / len(points)
+            cy = sum(p[1] for p in points) / len(points)
+            cells.setdefault((min(2, int(cy * 3 / h)), min(5, int(cx * 6 / w))), []).append(points)
+    if len(cells) != len(WEAPONS):
+        raise SystemExit(f'武器图集切分失败：应有 {len(WEAPONS)} 格，实际 {len(cells)} 格')
+    out = {}
+    for name, key in zip(WEAPONS, sorted(cells)):
+        keep = Image.new('L', mask.size, 0)
+        kp = keep.load()
+        for points in cells[key]:
+            for a, b in points:
+                kp[a, b] = 255
+        keep = keep.filter(ImageFilter.MaxFilter(5)).resize(sheet.size, Image.NEAREST)
+        piece = sheet.copy()
+        piece.putalpha(ImageChops.darker(sheet.getchannel('A'), keep))
+        out[name] = trim(piece)
     return out
 
 
@@ -165,46 +201,31 @@ def main():
         rel = f'scene/{name}.webp'
         if not src.exists() or fresh(src, rel):
             continue
-        im = Image.open(src).convert('RGB') if opaque else cutout(src)
+        im = Image.open(src).convert('RGB') if opaque else defringe(cutout(src), soft_only=name.startswith('mo_'))
         report.append((rel, save(fit(im, width=2200 if opaque else 2048), rel, 80 if opaque else 82)))
 
-    for name in ['cloud_light', 'cloud_dark']:
-        src = RAW / f'{name}.png'
-        rel = f'scene/{name}.webp'
-        if src.exists() and not fresh(src, rel):
-            report.append((rel, save(fit(cutout(src), width=2000), rel, 80)))
+    src = RAW / 'cloud_band.png'
+    if src.exists() and not fresh(src, 'scene/cloud_band.webp'):
+        report.append(('scene/cloud_band.webp', save(fit(defringe(cutout(src)), width=2000), 'scene/cloud_band.webp', 80)))
 
     src = RAW / 'gate.png'
     if src.exists() and not fresh(src, 'scene/gate.webp'):
         report.append(('scene/gate.webp', save(fit(Image.open(src).convert('RGB'), width=2200), 'scene/gate.webp', 80)))
-
-    src = RAW / 'silk.png'
-    if src.exists() and not fresh(src, 'silk.webp'):
-        # 镜像成 2×2 无缝贴图，并提亮减饱和，绢色才清雅
-        base = fit(Image.open(src).convert('RGB'), width=800)
-        base = ImageEnhance.Color(ImageEnhance.Brightness(base).enhance(1.2)).enhance(0.72)
-        w, h = base.size
-        tile = Image.new('RGB', (w * 2, h * 2))
-        tile.paste(base, (0, 0))
-        tile.paste(ImageOps.mirror(base), (w, 0))
-        tile.paste(ImageOps.flip(base), (0, h))
-        tile.paste(ImageOps.flip(ImageOps.mirror(base)), (w, h))
-        report.append(('silk.webp', save(tile, 'silk.webp', 72)))
 
     for src in sorted(RAW.glob('jinyi_*.png')):
         rel = f'jinyi/{src.stem[6:]}.webp'
         if not fresh(src, rel):
             report.append((rel, save(fit(cutout(src), long_side=900), rel, 80)))
 
-    # 分享图与站点图标
-    src = RAW / 'test_hero.png'
-    if src.exists() and not fresh(src, 'og_cover.jpg'):
-        Image.open(src).convert('RGB').resize((1200, 675), Image.LANCZOS).save(OUT / 'og_cover.jpg', quality=84)
-    logo = RAW / 'logo_hi.png'
-    if logo.exists() and not (ROOT / 'public/favicon-32.png').exists():
-        mark = trim(cutout(logo))
-        mark.resize((32, 32), Image.LANCZOS).save(ROOT / 'public/favicon-32.png')
-        mark.resize((180, 180), Image.LANCZOS).save(ROOT / 'public/apple-touch-icon.png')
+    # 站点图标：把标题放进方形画布，长边撑满
+    logo = RAW / f'logo_{LOGO}.png'
+    if logo.exists() and not fresh(logo, 'logo-mark.webp'):
+        mark = navy_logo(trim(cutout(logo)))
+        side = max(mark.size)
+        square = Image.new('RGBA', (side, side), (0, 0, 0, 0))
+        square.alpha_composite(mark, ((side - mark.width) // 2, (side - mark.height) // 2))
+        square.resize((32, 32), Image.LANCZOS).save(ROOT / 'public/favicon-32.png')
+        square.resize((180, 180), Image.LANCZOS).save(ROOT / 'public/apple-touch-icon.png')
 
     for src in sorted(RAW.glob('role_*.png')):
         name = src.stem[5:]
@@ -240,21 +261,17 @@ def main():
             continue
         report.append((rel, save(fit(cutout(src), long_side=1000), rel, 82)))
 
-    src = RAW / 'logo_hi.png'
-    if not src.exists():
-        src = RAW / 'logo_src.png'
-    if not fresh(src, 'logo-mark.webp'):
-        im = trim(cutout(src))
+    src = RAW / f'logo_{LOGO}.png'
+    if src.exists() and not fresh(src, 'logo-mark.webp'):
+        im = navy_logo(trim(cutout(src)))
         report.append(('logo-mark.webp', save(fit(im, long_side=256), 'logo-mark.webp', 90)))
-        report.append(('scene/title.webp', save(fit(im, long_side=1000), 'scene/title.webp', 84)))
+        report.append(('scene/title.webp', save(fit(im, long_side=1200), 'scene/title.webp', 86)))
 
     # 武器图鉴：6×3 的图集切开
     src = RAW / 'weapons.png'
     if src.exists() and not fresh(src, 'weapon/剑.webp'):
-        sheet = cutout(src)
-        k = sheet.width / 1536
-        for n, box in WEAPON_BOXES.items():
-            save(trim(drop_specks(sheet.crop(tuple(round(v * k) for v in box)))), f'weapon/{n}.webp', 84)
+        for n, piece in weapon_slices(cutout(src)).items():
+            save(piece, f'weapon/{n}.webp', 84)
         report.append(('weapon/*', 0))
 
     # 走马灯、列表用的小图，避免一屏同时下载十几张原图

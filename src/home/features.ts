@@ -1,4 +1,4 @@
-// 特色长卷：竖向滚动被转换成横向展卷。一轴绢本从右向左缓缓展开（合中国手卷的阅读方向）。
+// 八大特色：一幕一幕的全屏画面。竖向滚动驱动，下一幅从底部被揭开，上一幅同时缓缓退后。
 import { FEATURES } from '../data/content';
 import { featImg } from '../data/assets';
 import { gsap, reduced } from '../lib/motion';
@@ -8,26 +8,19 @@ export function initFeatures() {
   if (!root) return;
 
   root.innerHTML = `
-    <div class="scroll-pin" id="scroll-pin">
-      <div class="scroll-rod rod-right" aria-hidden="true"></div>
-      <div class="scroll-rod rod-left" aria-hidden="true"></div>
-      <div class="scroll-view" id="scroll-view">
-        <div class="scroll-track" id="scroll-track">
-          <header class="scroll-intro">
-            <h2 class="inscription" id="features-title" data-reveal-title>八大特色</h2>
-            <p class="inscription scroll-poem">构筑完整三界江湖的核心系统</p>
-          </header>
-          ${FEATURES.map((f) => `
-            <article class="scroll-panel">
-              <figure><img src="${featImg(f.key)}" alt="${f.title}" loading="lazy" decoding="async" /></figure>
-              <div class="scroll-text">
-                <h3 class="inscription">${f.title}</h3>
-                <p>${f.desc}</p>
-              </div>
-            </article>`).join('')}
-          <a class="scroll-end" href="/features/"><span class="inscription">展阅全卷</span></a>
-        </div>
-      </div>
+    <div class="feat-pin" id="feat-pin">
+      <h2 class="sr-only" id="features-title">八大特色</h2>
+      ${FEATURES.map((f, i) => `
+        <article class="feat-panel" style="z-index:${i + 1}">
+          <div class="feat-art"><img src="${featImg(f.key)}" alt="${f.title}" ${i > 1 ? 'loading="lazy"' : ''} decoding="async" /></div>
+          <div class="feat-copy">
+            <p class="feat-label">${f.label}</p>
+            <h3 class="mask"><span>${f.title}</span></h3>
+            <p class="feat-desc">${f.desc}</p>
+          </div>
+        </article>`).join('')}
+      <ol class="feat-ticks" aria-hidden="true">${FEATURES.map(() => '<li></li>').join('')}</ol>
+      <a class="btn btn-ghost feat-all" href="/features/">查看全部特色</a>
     </div>
   `;
 
@@ -36,51 +29,42 @@ export function initFeatures() {
     return;
   }
 
-  const pin = root.querySelector<HTMLElement>('#scroll-pin')!;
-  const track = root.querySelector<HTMLElement>('#scroll-track')!;
-  const view = root.querySelector<HTMLElement>('#scroll-view')!;
-  const rodRight = root.querySelector<HTMLElement>('.rod-right')!;
-  const rodLeft = root.querySelector<HTMLElement>('.rod-left')!;
-  const panels = [...root.querySelectorAll<HTMLElement>('.scroll-panel')];
+  const pin = root.querySelector<HTMLElement>('#feat-pin')!;
+  const panels = [...root.querySelectorAll<HTMLElement>('.feat-panel')];
+  const ticks = [...root.querySelectorAll<HTMLElement>('.feat-ticks li')];
+  ticks[0]?.classList.add('on');
 
-  // 轨道向右移动，读到的内容从右向左展开
-  const distance = () => Math.max(0, track.scrollWidth - view.clientWidth);
-  gsap.set(track, { x: () => -distance() });
+  // 第一幅随区块进入时自己揭开文字
+  const first = panels[0];
+  gsap.from(first.querySelector('.feat-copy h3 span'), { yPercent: 112, duration: 1.5, ease: 'expo.out', scrollTrigger: { trigger: pin, start: 'top 55%' } });
+  gsap.from(first.querySelectorAll('.feat-label, .feat-desc'), { opacity: 0, y: 18, duration: 1.4, stagger: 0.12, ease: 'expo.out', scrollTrigger: { trigger: pin, start: 'top 55%' } });
 
-  const center = () => view.clientWidth / 2;
-  const slide = gsap.to(track, {
-    x: 0,
-    ease: 'none',
+  const tl = gsap.timeline({
+    defaults: { ease: 'none' },
     scrollTrigger: {
       trigger: pin,
       start: 'top top',
-      end: () => `+=${distance() * 0.72}`,
+      end: () => `+=${innerHeight * (panels.length - 1) * 1.05}`,
       pin: true,
-      scrub: 0.6,
+      scrub: 0.8,
       invalidateOnRefresh: true,
       anticipatePin: 1,
-    },
-    onUpdate() {
-      // 卷动时每幅画在框内反向滑动，卷轴表面的高光也随之转动
-      const x = Number(gsap.getProperty(track, 'x'));
-      panels.forEach((p) => {
-        const dist = (p.offsetLeft + p.offsetWidth / 2 + x - center()) / view.clientWidth;
-        if (Math.abs(dist) < 1.4) gsap.set(p.querySelector('img'), { xPercent: dist * -6 });
-      });
+      onUpdate(self) {
+        const cur = Math.round(self.progress * (panels.length - 1));
+        ticks.forEach((t, i) => t.classList.toggle('on', i === cur));
+      },
     },
   });
-  void slide;
 
-  // 进入：两根卷轴从中央分开，绢面随之露出
-  gsap.fromTo(
-    view,
-    { clipPath: 'inset(0 46% 0 46%)' },
-    {
-      clipPath: 'inset(0 0% 0 0%)',
-      ease: 'power2.inOut',
-      scrollTrigger: { trigger: root, start: 'top 85%', end: 'top 12%', scrub: 0.8 },
-    },
-  );
-  gsap.fromTo(rodLeft, { xPercent: 0, x: () => innerWidth * 0.44 }, { x: 0, ease: 'power2.inOut', scrollTrigger: { trigger: root, start: 'top 85%', end: 'top 12%', scrub: 0.8 } });
-  gsap.fromTo(rodRight, { x: () => -innerWidth * 0.44 }, { x: 0, ease: 'power2.inOut', scrollTrigger: { trigger: root, start: 'top 85%', end: 'top 12%', scrub: 0.8 } });
+  panels.forEach((panel, i) => {
+    if (i === 0) return;
+    const at = i - 1;
+    const prev = panels[i - 1];
+    tl.fromTo(panel, { clipPath: 'inset(100% 0 0 0)' }, { clipPath: 'inset(0% 0 0 0)', duration: 1, ease: 'power2.inOut' }, at)
+      .fromTo(panel.querySelector('img'), { scale: 1.3, yPercent: 8 }, { scale: 1.04, yPercent: 0, duration: 1, ease: 'power2.out' }, at)
+      .to(prev.querySelector('img'), { yPercent: -10, scale: 1.1, duration: 1, ease: 'power2.inOut' }, at)
+      .to(prev.querySelector('.feat-copy'), { y: -60, opacity: 0, duration: 0.5, ease: 'power2.in' }, at)
+      .from(panel.querySelector('.feat-copy h3 span'), { yPercent: 112, duration: 0.5, ease: 'power3.out' }, at + 0.5)
+      .from(panel.querySelectorAll('.feat-label, .feat-desc'), { opacity: 0, y: 20, duration: 0.4, stagger: 0.06, ease: 'power2.out' }, at + 0.56);
+  });
 }

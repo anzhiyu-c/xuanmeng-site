@@ -25,7 +25,7 @@ page().innerHTML = `
     <ul class="pet-grid" id="pet-grid">
       ${ALL.map(({ pet, series }, i) => `
         <li data-s="${series.key}">
-          <button type="button" data-i="${i}" aria-label="查看${pet.name}的梦影故事">
+          <button class="holo" type="button" data-i="${i}" aria-label="查看${pet.name}的梦影故事">
             <img src="${petSmall(pet.img)}" alt="" loading="lazy" decoding="async" />
             <b>${pet.name}</b>
             <small>${pet.base}</small>
@@ -59,7 +59,7 @@ tabs.forEach((tab) =>
       li.hidden = !on;
       if (on) shown.push(li);
     });
-    if (!reduced) gsap.fromTo(shown, { opacity: 0, y: 30, rotate: -2 }, { opacity: 1, y: 0, rotate: 0, stagger: 0.03, duration: 0.8, ease: 'power3.out' });
+    if (!reduced) gsap.fromTo(shown, { opacity: 0, y: 30 }, { opacity: 1, y: 0, stagger: 0.03, duration: 1.1, ease: 'expo.out' });
   }),
 );
 
@@ -79,7 +79,7 @@ const open = (i: number) => {
   stopScroll();
   if (!reduced) {
     gsap.fromTo(dialog, { opacity: 0 }, { opacity: 1, duration: 0.4 });
-    gsap.fromTo(dImg, { opacity: 0, scale: 0.86, rotate: -3 }, { opacity: 1, scale: 1, rotate: 0, duration: 1, ease: 'power3.out' });
+    gsap.fromTo(dImg, { opacity: 0, y: 24, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 1.4, ease: 'expo.out' });
     gsap.fromTo(dBody.children, { opacity: 0, x: 20 }, { opacity: 1, x: 0, stagger: 0.05, duration: 0.7, ease: 'power3.out', delay: 0.1 });
   }
 };
