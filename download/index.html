@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>下载游戏 - 《玄梦》ONLINE 官方网站</title>
+  <meta name="description" content="《玄梦》ONLINE Windows 客户端下载：版本信息、配置要求与安装说明。" />
+  <link rel="canonical" href="https://www.xuanmeng.cc/download/" />
+  <meta property="og:title" content="下载游戏 - 《玄梦》ONLINE 官方网站" />
+  <meta property="og:description" content="《玄梦》ONLINE Windows 客户端下载：版本信息、配置要求与安装说明。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.xuanmeng.cc/download/" />
+  <meta property="og:image" content="https://www.xuanmeng.cc/img/og_cover.jpg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <script src="/js/config.js"></script>
+  <script src="/js/announcements.js"></script>
+  <script type="module" src="/src/pages/download.ts"></script>
+</head>
+<body class="page page-download">
+  <main id="page">
+    <header class="page-hero">
+      <div class="page-hero-art" style="background-image:url(/img/scene/gate.webp)"></div>
+      <div class="page-hero-veil"></div>
+      <div class="page-hero-copy">
+        <h1 data-reveal-title>下载中心</h1>
+        <p>三界辽阔，梦从今始</p>
+      </div>
+    </header>
+    <section class="dl-sec">
+      <article class="dl-card" id="dl-client">
+        <img src="/img/logo-mark.webp" alt="玄梦" width="120" height="120" />
+        <div>
+          <h2>玄梦 ONLINE · Windows 客户端</h2>
+          <p class="dl-meta">适用系统：Windows 10 / 11（64 位）<br />版本号：<b data-dl-version></b>　<b data-dl-size></b><br />更新时间：<b data-dl-updated></b></p>
+          <div class="dl-cta">
+            <a class="btn btn-gold" data-dl-direct>立即下载客户端</a>
+            <a class="btn btn-ghost" href="/news/2026-10-12-update.html">查看新版安装说明</a>
+            <a class="btn btn-ghost" data-dl-mirror hidden>备用网盘下载</a>
+          </div>
+          <p class="dl-note">本次安装包由运营统一提供，请联系运营获取。官网暂不提供安装包直链。请联系运营获取8.0.0新版安装包，不要运行来源不明的安装包。</p>
+        </div>
+      </article>
+
+      <div class="dl-cols">
+        <section class="dl-panel" id="dl-spec">
+          <h3>配置要求</h3>
+          <dl class="dl-table">
+            <div><dt>操作系统</dt><dd>Windows 10 / 11（64 位）</dd></div>
+            <div><dt>内存</dt><dd>4 GB 及以上</dd></div>
+            <div><dt>硬盘空间</dt><dd>请预留安装包 2 倍以上可用空间</dd></div>
+            <div><dt>运行组件</dt><dd>微软 VC++ 运行库（含 UCRT）</dd></div>
+          </dl>
+        </section>
+        <section class="dl-panel" id="dl-guide">
+          <h3>安装说明</h3>
+          <ol class="dl-steps">
+            <li>联系运营获取8.0.0安装包，并保存至本地磁盘</li>
+            <li>双击安装包，安装到纯英文目录，例如 C:\XuanMengOnline</li>
+            <li>双击「玄梦ONLINE」启动程序</li>
+            <li>注册账号，选择服务器，即刻入梦</li>
+          </ol>
+        </section>
+      </div>
+
+      <section class="dl-panel" id="dl-faq">
+        <h3>常见问题</h3>
+        <details open><summary>启动时提示缺少运行库怎么办？</summary><p>请安装微软 VC++ 运行库（含 UCRT）后重新启动客户端；多数系统更新后即自带该组件。</p></details>
+        <details><summary>下载被安全软件拦截怎么办？</summary><p>请先核对安装包来源与版本，再联系运营确认；不要使用来源不明的替代安装包。</p></details>
+        <details><summary>如何获取最新版本？</summary><p>本次更新包含客户端引擎升级，7.x及更早版本需要重新安装8.0.0客户端。请联系运营获取新版安装包。覆盖安装后，已有且校验一致的地图无需重复下载；全新安装首次启动需补齐约682 MB地图资源。</p></details>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
